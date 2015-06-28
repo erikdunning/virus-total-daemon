@@ -8,10 +8,11 @@ class Data {
 
     protected $dbh;
 
-    public function __construct( $host, $database, $username, $password ){
-        $dsn = "mysql:dbname=$database;host=$host";
+    public function __construct(){
+        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $dsn = 'mysql:dbname='.$c->mysql->database.';host='.$c->mysql->host;
         try {
-            $this->dbh = new PDO($dsn, $username, $password);
+            $this->dbh = new PDO($dsn, $c->mysql->username, $c->mysql->password);
         } catch (PDOException $e) {
             echo 'Connection failed: ' . $e->getMessage();
         }
@@ -59,6 +60,54 @@ class Data {
             $stmt->execute();
         }
         
+    }
+
+    public function getQueued(){
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'queued\' ORDER BY `time_added` DESC LIMIT 1');
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+        if( sizeof( $result ) > 0 ){
+            return $result[0];
+        }
+        return false;
+    }
+
+    public function markSending( $job ){
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'sending' WHERE `id` = $job->id");
+        return $stmt->execute();
+    }
+
+    public function markPending( $job ){
+        $timeSent = gmdate('U');
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'pending', `time_sent` = $timeSent WHERE `id` = $job->id");
+        return $stmt->execute();
+    }
+
+    public function getPending(){
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'pending\' ORDER BY `time_sent` DESC LIMIT 1');
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+        if( sizeof( $result ) > 0 ){
+            return $result[0];
+        }
+        return false;
+    }
+
+    public function setReportData( $job, $report ){
+        
+
+    }   
+
+    private function markSuccess( $job ){
+        $timeCompleted = gmdate('U');
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'success', `time_sent` = $timeCompleted WHERE `id` = $job->id");
+        return $stmt->execute();
+    }
+
+    private function markFailure( $job ){
+        $timeCompleted = gmdate('U');
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'failure', `time_sent` = $timeCompleted WHERE `id` = $job->id");
+        return $stmt->execute();
     }
 
 }

@@ -1,28 +1,45 @@
 <?php
 require 'vendor/autoload.php';
 
-use VirusTotal\Reader;
 use VirusTotal\Data;
+use VirusTotal\Reader;
+use VirusTotal\Sender;
+use VirusTotal\Responder;
 
-    /* Load Configuration File */
-    $c = json_decode( file_get_contents( __DIR__ . '/config.json' )  ); 
+while( true ){
 
-     
     /* Instantiate Required Classes */
-    $virusTotalReader = new Reader( $c->exchange->host, $c->exchange->username, $c->exchange->password );
-    $virusTotalData = new Data( $c->mysql->host, $c->mysql->database, $c->mysql->username, $c->mysql->password );
+    $virusTotalReader       = new Reader();
+    $virusTotalSender       = new Sender();
+    $virusTotalResponder    = new Responder();
+    $virusTotalData         = new Data();
 
+    /* Download Messages / Attachments and Create Jobs */
     $messages = $virusTotalReader->getMessages();
     foreach( $messages as $msg ){
-        // download attachments
-
-        $attachmentItems = $virusTotalReader->downloadAttachments( $msg->ItemId->Id, __DIR__ . '/attachments' );
-        // if exists in db return
-
-        // create db entry
+        $attachmentItems = $virusTotalReader->downloadAttachments( $msg );
         $virusTotalData->createJobs( $msg, $attachmentItems );
-
-
     }
 
     print_r($messages);
+
+    /* Perform Sender Operation */
+    $job = $virusTotalData->getQueued();
+    if( $job ){
+        $virusTotalData->markSending( $job );
+        $virusTotalSender->sendVirusTotalRequest( $job );
+        $virusTotalData->markPending( $job );
+    }
+
+    /* Perform Responder Operation */
+    $job = $virusTotalData->getPending();
+    if( $job ){
+        $report = $virusTotalSender->getVirusTotalReport( $job ); 
+        if( $report ){
+            $virusTotalData->setReportData( $job, $report );
+            $virusTotalResponder->sendReply( $job, $report );
+        }
+    }
+
+    sleep(30);
+}

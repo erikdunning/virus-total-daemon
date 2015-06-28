@@ -22,16 +22,11 @@ use PhpEws\DataType\NonEmptyArrayOfRequestAttachmentIdsType;
 
 class Reader {
 
-    protected $host;
-    protected $username;
-    protected $password;
     protected $ews;
 
-    public function __construct($host, $username, $password){
-        $this->host = $host;
-        $this->username = $username;
-        $this->password = $password;
-        $this->ews = new EwsConnection($host, $username, $password, EwsConnection::VERSION_2010_SP2);
+    public function __construct(){
+        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
     }
 
     public function getMessages(){
@@ -101,7 +96,12 @@ class Reader {
         return $filteredMessages;
     }
 
-    public function downloadAttachments( $message_id, $save_dir ){
+    public function downloadAttachments( $message ){
+
+        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+
+        $message_id = $message->ItemId->Id;
+        $save_dir = $c->attachments->directory;
 
         $request = new GetItemType();
 
@@ -131,7 +131,7 @@ class Reader {
                     $attachments = $message->Attachments->FileAttachment;
                 }
 
-                foreach($attachments as $index => $attachment) {
+                foreach($attachments as $attachment) {
                     $request = new GetAttachmentType();
                     $request->AttachmentIds = new NonEmptyArrayOfRequestAttachmentIdsType();
                     $request->AttachmentIds->AttachmentId = new RequestAttachmentIdType();
@@ -142,7 +142,7 @@ class Reader {
                     $attachments = $response->ResponseMessages->GetAttachmentResponseMessage->Attachments;
                     $content = $attachments->FileAttachment->Content;
 
-                    $id = sha1( $message_id . $index );
+                    $id = sha1( $attachment->AttachmentId->Id );
                     file_put_contents("$save_dir/$id", $content);
                     $attachmentItems[] = array(
                         'attachment_id' => $id,

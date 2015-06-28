@@ -2,42 +2,37 @@
 
 namespace VirusTotal;
 
-use PhpEws/EwsConnection;
-use PhpEws/Ntlm/NtlmSoapClient;
-use PhpEws/Ntlm/NtlmSoapClient/Exchange;
-use PhpEws/Exception/EwsException;
-use PhpEws/DataType;
+use PhpEws\EwsConnection;
+use PhpEws\Ntlm\NtlmSoapClient;
+use PhpEws\Ntlm\NtlmSoapClient\Exchange;
+use PhpEws\Exception\EwsException;
+use PhpEws\DataType;
 
-use PhpEws/DataType/MessageType;
-use PhpEws/DataType/EmailAddressType;
-use PhpEws/DataType/BodyType;
-use PhpEws/DataType/SingleRecipientType;
-use PhpEws/DataType/CreateItemType;
-use PhpEws/DataType/ArrayOfRecipientsType;
-use PhpEws/DataType/NonEmptyArrayOfAllItemsType;
-use PhpEws/DataType/ItemType;
-use PhpEws/DataType/ExchangeImpersonationType;
-use PhpEws/DataType/ConnectingSIDType;
-use PhpEws/DataType/FileAttachmentType;
-use PhpEws/DataType/CreateAttachmentType;
-use PhpEws/DataType/SendItemType;
-use PhpEws/DataType/ItemIdType;
-use PhpEws/DataType/TargetFolderIdType;
-use PhpEws/DataType/DistinguishedFolderIdType;
-use PhpEws/DataType/NonEmptyArrayOfAttachmentsType;
+use PhpEws\DataType\MessageType;
+use PhpEws\DataType\EmailAddressType;
+use PhpEws\DataType\BodyType;
+use PhpEws\DataType\SingleRecipientType;
+use PhpEws\DataType\CreateItemType;
+use PhpEws\DataType\ArrayOfRecipientsType;
+use PhpEws\DataType\NonEmptyArrayOfAllItemsType;
+use PhpEws\DataType\ItemType;
+use PhpEws\DataType\ExchangeImpersonationType;
+use PhpEws\DataType\ConnectingSIDType;
+use PhpEws\DataType\FileAttachmentType;
+use PhpEws\DataType\CreateAttachmentType;
+use PhpEws\DataType\SendItemType;
+use PhpEws\DataType\ItemIdType;
+use PhpEws\DataType\TargetFolderIdType;
+use PhpEws\DataType\DistinguishedFolderIdType;
+use PhpEws\DataType\NonEmptyArrayOfAttachmentsType;
 
 class Responder {
 
-    protected $host;
-    protected $username;
-    protected $password;
     protected $ews;
 
-    public function __construct($host, $username, $password){
-        $this->host = $host;
-        $this->username = $username;
-        $this->password = $password;
-        $this->ews = new EwsConnection($host, $username, $password, EwsConnection::VERSION_2010_SP2);
+    public function __construct(){
+        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
     }
 
     public function replyToMessage($id,$changeKey){
