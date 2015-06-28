@@ -1,0 +1,42 @@
+{
+    "exchange":{
+        "host":"",
+        "username":"",
+        "password":""
+    },
+    "mysql":{
+        "host":"",
+        "username":"",
+        "password":"",
+        "database":""
+    },
+    "virusTotal": {
+        "apiKey":""
+    },
+    "attachments": {
+        "maxSize": 128000000,
+        "maxNumber": 1,
+        "directory":"attachments"
+    },
+    "email":{
+        "success":{
+            "to":"",
+            "from":"no-reply@badgermeter.com",
+            "cc":"",
+            "subject":"Virus Total Results"
+        },
+        "error":{
+            "to":"",
+            "from":"",
+            "cc":"",
+            "subject":"Virus Total Error"
+
+        },
+        "admin":{
+            "to":"",
+            "from":"",
+            "cc":"",
+            "subject":"ADMIN: Virus Total Report"
+        }
+    }
+}

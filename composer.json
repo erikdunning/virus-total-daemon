@@ -1,0 +1,8 @@
+{
+    "require": {
+        "php-ews/php-ews": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {"VirusTotal\\": "src/"}
+    }
+}

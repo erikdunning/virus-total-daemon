@@ -1,0 +1,60 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "56cd6f6dc550c79f96a46636aa5a1810",
+    "packages": [
+        {
+            "name": "php-ews/php-ews",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/adamelso/php-ews.git",
+                "reference": "66f2a69e7066f2672c748675400dc853aa81e6a9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/adamelso/php-ews/zipball/66f2a69e7066f2672c748675400dc853aa81e6a9",
+                "reference": "66f2a69e7066f2672c748675400dc853aa81e6a9",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~5.4"
+            },
+            "require-dev": {
+                "phpspec/phpspec": "~2",
+                "symfony/console": "~2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Adam Elsodaney",
+                    "email": "adam.elso@gmail.com"
+                }
+            ],
+            "description": "The PHP Exchange Web Services library (php-ews) is intended to make communication with Microsoft Exchange servers using Exchange Web Services easier. It handles the NTLM authentication required to use the SOAP services and provides an object-oriented interface to the complex types required to form a request.",
+            "time": "2015-06-04 15:22:33"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "php-ews/php-ews": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
