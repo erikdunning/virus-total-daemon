@@ -2,12 +2,17 @@
 
 namespace VirusTotal;
 
+use stdClass;
 use PhpEws\EwsConnection;
 use PhpEws\DataType\GetItemType;
 use PhpEws\DataType\GetAttachmentType;
 use PhpEws\DataType\RequestAttachmentIdType;
 use PhpEws\DataType\FindItemType;
 use PhpEws\DataType\ItemIdType;
+use PhpEws\DataType\RestrictionType;
+use PhpEws\DataType\ConstantValueType;
+use PhpEws\DataType\FieldURIOrConstantType;
+use PhpEws\DataType\IsGreaterThanOrEqualToType;
 use PhpEws\DataType\ItemResponseShapeType;
 use PhpEws\DataType\DefaultShapeNamesType;
 use PhpEws\DataType\ItemQueryTraversalType;
@@ -23,18 +28,28 @@ use PhpEws\DataType\NonEmptyArrayOfRequestAttachmentIdsType;
 class Reader {
 
     protected $ews;
+    protected $config;
 
     public function __construct(){
-        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $this->config = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $c = $this->config;
         $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
     }
 
-    public function getMessages(){
+    public function getMessages( $start ){
 
         $request = new FindItemType();
 
         $request->ItemShape = new ItemResponseShapeType();
         $request->ItemShape->BaseShape = DefaultShapeNamesType::DEFAULT_PROPERTIES;
+
+        $request->Restriction = new RestrictionType();
+        $request->Restriction->IsGreaterThanOrEqualTo = new IsGreaterThanOrEqualToType();
+        $request->Restriction->IsGreaterThanOrEqualTo->FieldURI = new stdClass;
+        $request->Restriction->IsGreaterThanOrEqualTo->FieldURI->FieldURI = 'item:DateTimeReceived';
+        $request->Restriction->IsGreaterThanOrEqualTo->FieldURIOrConstant = new FieldURIOrConstantType();
+        $request->Restriction->IsGreaterThanOrEqualTo->FieldURIOrConstant->Constant = new ConstantValueType();
+        $request->Restriction->IsGreaterThanOrEqualTo->FieldURIOrConstant->Constant->Value = $start->format('c');
 
         $request->Traversal = ItemQueryTraversalType::SHALLOW;
 
@@ -67,7 +82,12 @@ class Reader {
             $totalItems = $response->ResponseMessages->FindItemResponseMessage->RootFolder->TotalItemsInView;
         }
 
-        $rootFolder = $response->ResponseMessages->FindItemResponseMessage->RootFolder;
+        $rootFolder = $response->ResponseMessages->FindItemResponseMessage->RootFolder; 
+
+        if( ! isset( $rootFolder->Items->Message ) ){
+            return array();
+        }
+
         $messages = $rootFolder->Items->Message;
         $lastItemInRange = $rootFolder->IncludesLastItemInRange;
         $page = 1;
@@ -86,9 +106,13 @@ class Reader {
             $page++;
         }
 
+        if( $messages && ( ! is_array( $messages ) ) ){
+            $messages = array( $messages );
+        }
+
         $filteredMessages = array();
         foreach( $messages as $m ){
-            if( $m->HasAttachments == 1 ){
+            if( property_exists( $m, 'HasAttachments' ) && ( $m->HasAttachments == 1 ) ){
                 $filteredMessages[] = $m;
             }
         }
@@ -132,6 +156,9 @@ class Reader {
                 }
 
                 foreach($attachments as $attachment) {
+
+                    $id = sha1( $attachment->AttachmentId->Id );
+
                     $request = new GetAttachmentType();
                     $request->AttachmentIds = new NonEmptyArrayOfRequestAttachmentIdsType();
                     $request->AttachmentIds->AttachmentId = new RequestAttachmentIdType();
@@ -142,7 +169,11 @@ class Reader {
                     $attachments = $response->ResponseMessages->GetAttachmentResponseMessage->Attachments;
                     $content = $attachments->FileAttachment->Content;
 
-                    $id = sha1( $attachment->AttachmentId->Id );
+                    if( ! file_exists( $save_dir ) ){
+                        error_log('Virus Total Daemon: Attachment directory does not exist! ' . $save_dir);
+                        continue;
+                    }
+
                     file_put_contents("$save_dir/$id", $content);
                     $attachmentItems[] = array(
                         'attachment_id' => $id,

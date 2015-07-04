@@ -14,14 +14,14 @@ class Data {
         try {
             $this->dbh = new PDO($dsn, $c->mysql->username, $c->mysql->password);
         } catch (PDOException $e) {
-            echo 'Connection failed: ' . $e->getMessage();
+            error_log("Virus Total Daemon: Connection failed. \n" . $e->getMessage());
         }
     }
 
     public function createJobs( $message, $attachmentItems ){
 
         $stmt = $this->dbh->prepare("
-            INSERT INTO `virustotal`.`jobs` ( 
+            INSERT INTO `jobs` ( 
                 email_id,
                 email_change_key,
                 attachment_id, 
@@ -57,6 +57,13 @@ class Data {
             $timeAdded = gmdate('U');
             $status = 'queued';
 
+            $st = $this->dbh->prepare('SELECT `id` FROM `jobs` WHERE `attachment_id` = ? LIMIT 1');
+            $st->execute(array( $attachmentId ));
+            $result = $st->fetchAll(PDO::FETCH_OBJ);
+            if( sizeof( $result ) > 0 ){
+                continue;
+            }
+
             $stmt->execute();
         }
         
@@ -77,14 +84,21 @@ class Data {
         return $stmt->execute();
     }
 
-    public function markPending( $job ){
+    public function markPending( $job, $scanId ){
         $timeSent = gmdate('U');
-        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'pending', `time_sent` = $timeSent WHERE `id` = $job->id");
-        return $stmt->execute();
+        $stmt = $this->dbh->prepare("
+            UPDATE `jobs` SET
+                `scan_id` = ?,
+                `status` = 'pending',
+                `time_sent` = ?
+            WHERE
+                `id` = ?
+        ");
+        return $stmt->execute(array( $scanId, $timeSent, $job->id ));
     }
 
     public function getPending(){
-        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'pending\' ORDER BY `time_sent` DESC LIMIT 1');
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'pending\' ORDER BY `time_sent` ASC LIMIT 1');
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);
         if( sizeof( $result ) > 0 ){
@@ -94,17 +108,22 @@ class Data {
     }
 
     public function setReportData( $job, $report ){
-        
+        $stmt = $this->dbh->prepare("
+            UPDATE `jobs` SET
+                `report` = ?
+            WHERE
+                `id` = ?
+        ");
+        return $stmt->execute( array( $report, $job->id ) );
+    }
 
-    }   
-
-    private function markSuccess( $job ){
+    public function markSuccess( $job ){
         $timeCompleted = gmdate('U');
         $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'success', `time_sent` = $timeCompleted WHERE `id` = $job->id");
         return $stmt->execute();
     }
 
-    private function markFailure( $job ){
+    public function markFailure( $job ){
         $timeCompleted = gmdate('U');
         $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'failure', `time_sent` = $timeCompleted WHERE `id` = $job->id");
         return $stmt->execute();
