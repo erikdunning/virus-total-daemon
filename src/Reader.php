@@ -25,15 +25,19 @@ use PhpEws\DataType\NonEmptyArrayOfBaseItemIdsType;
 use PhpEws\DataType\NonEmptyArrayOfBaseFolderIdsType;
 use PhpEws\DataType\NonEmptyArrayOfRequestAttachmentIdsType;
 
+use VirusTotal\Data;
+
 class Reader {
 
     protected $ews;
     protected $config;
+    protected $data;
 
     public function __construct(){
         $this->config = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
         $c = $this->config;
         $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
+        $this->data = new Data();
     }
 
     public function getMessages( $start ){
@@ -158,6 +162,10 @@ class Reader {
                 foreach($attachments as $attachment) {
 
                     $id = sha1( $attachment->AttachmentId->Id );
+
+                    if( $this->data->attachmentExists( $id ) ){
+                        continue;
+                    }
 
                     $request = new GetAttachmentType();
                     $request->AttachmentIds = new NonEmptyArrayOfRequestAttachmentIdsType();

@@ -1,6 +1,7 @@
 {
     "require": {
-        "php-ews/php-ews": "dev-master"
+        "php-ews/php-ews": "dev-master",
+        "smarty/smarty": "^3.1"
     },
     "autoload": {
         "psr-4": {"VirusTotal\\": "src/"}

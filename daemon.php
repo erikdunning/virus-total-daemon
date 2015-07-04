@@ -1,4 +1,9 @@
 <?php
+
+ini_set("log_errors", 1);
+ini_set("error_log", __DIR__ . "/php-error.log");
+error_reporting(E_ALL);
+
 require 'vendor/autoload.php';
 
 use VirusTotal\Data;
@@ -50,7 +55,7 @@ while( true ){
             echo 'Report for job ' . $job->id . " retrieved.\n";
             $virusTotalData->setReportData( $job, $report );
             $virusTotalData->markSuccess( $job );
-            //$virusTotalResponder->sendReply( $job, $report );
+            $virusTotalResponder->sendResponse( $job, $report );
         } else if( $report === 0 ){
             echo 'Report for job ' . $job->id . " not found.\n";
             $virusTotalData->markFailure( $job );

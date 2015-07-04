@@ -2,6 +2,7 @@
 
 namespace VirusTotal;
 
+use Smarty;
 use PhpEws\EwsConnection;
 use PhpEws\Ntlm\NtlmSoapClient;
 use PhpEws\Ntlm\NtlmSoapClient\Exchange;
@@ -29,14 +30,31 @@ use PhpEws\DataType\NonEmptyArrayOfAttachmentsType;
 class Responder {
 
     protected $ews;
+    protected $smarty;
 
     public function __construct(){
         $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
         $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
+        $this->smarty = new Smarty();
+        $this->smarty->setTemplateDir(  __DIR__ . '/../smarty/templates'     );
+        $this->smarty->setCompileDir(   __DIR__ . '/../smarty/templates_c'   );
+        $this->smarty->setConfigDir(    __DIR__ . '/../smarty/configs'       );
+        $this->smarty->setCacheDir(     __DIR__ . '/../smarty/cache'         );
     }
 
-    public function replyToMessage($id,$changeKey){
+    public function sendResponse( $job, $report ){
 
+        $parsedReport = json_decode( $report ); 
+
+        $s = $this->smarty;
+        $s->clearAllAssign();
+
+        $s->assign('permalink',         $parsedReport->permalink    );
+        $s->assign('filename',          $job->attachment_name       );
+        $s->assign('time_added',        $job->time_added            );
+        $s->assign('time_sent',         $job->time_sent             );
+        $s->assign('time_completed',    $job->time_completed        );
+    
         //$msg = new ReplyAllToItemType();
         $msg = new MessageType();
 
@@ -49,12 +67,12 @@ class Responder {
         */
 
         $msg->ReferenceItemId = new ItemIdType();
-        $msg->ReferenceItemId->Id = $id;
-        $msg->ReferenceItemId->ChangeKey = $changeKey;
+        $msg->ReferenceItemId->Id = $job->email_id;
+        $msg->ReferenceItemId->ChangeKey = $job->email_change_key;
 
         $msg->NewBodyContent = new BodyType();
         $msg->NewBodyContent->BodyType = 'HTML';
-        $msg->NewBodyContent->_ = 'HTML Content Goes Here';
+        $msg->NewBodyContent->_ = $s->fetch('response.tmpl');
 
         $msgRequest = new CreateItemType();
         $msgRequest->Items = new NonEmptyArrayOfAllItemsType();
@@ -62,78 +80,10 @@ class Responder {
         $msgRequest->MessageDisposition = 'SendAndSaveCopy';
         $msgRequest->MessageDispositionSpecified = TRUE;
 
-        $response = $ews->CreateItem($msgRequest);
+        $response = $this->ews->CreateItem($msgRequest);
 
         return $response->ResponseMessages->CreateItemResponseMessage->ResponseCode;
 
-    }
-
-    protected function sendEmail( $toAddresses ){
-        
-        // Configure impersonation
-        $ei = new ExchangeImpersonationType();
-        $sid = new ConnectingSIDType();
-        $sid->PrimarySmtpAddress = 'mark.sneed@domain.com';
-        $ei->ConnectingSID = $sid;
-        $this->ews->setImpersonation($ei);
-        
-        // Create message
-        $msg = new MessageType();
-        $toAddresses = array();
-        $toAddresses[0] = new EmailAddressType();
-        $toAddresses[0]->EmailAddress = 'sara.smith@domain.com';
-        $toAddresses[0]->Name = 'Sara Smith';
-        
-        $msg->ToRecipients = $toAddresses;
-        $msg->Subject = 'Test email message';
-        
-        $msg->Body = new BodyType();
-        $msg->Body->BodyType = 'HTML';
-        $msg->Body->_ = '<p style="font-size: 18px;"><b>Test email msg from php ews library</b></p>';
-        
-        // Save message
-        $msgRequest = new CreateItemType();
-        $msgRequest->Items = new NonEmptyArrayOfAllItemsType();
-        $msgRequest->Items->Message = $msg;
-        $msgRequest->MessageDisposition = 'SaveOnly';
-        $msgRequest->MessageDispositionSpecified = true;
-        
-        $msgResponse = $this->ews->CreateItem($msgRequest);
-        $msgResponseItems = $msgResponse->ResponseMessages->CreateItemResponseMessage->Items;
-        
-        // Create attachment(s)
-        $attachments = array();
-        $attachments[0] = new FileAttachmentType();
-        $attachments[0]->Content = file_get_contents('path-to-file.pdf');
-        $attachments[0]->Name = 'File Name.pdf';
-        $attachments[0]->ContentType = 'application/pdf';
-        
-        // Attach files to message
-        $attRequest = new CreateAttachmentType();
-        $attRequest->ParentItemId = $msgResponseItems->Message->ItemId;
-                $attRequest->Attachments = new NonEmptyArrayOfAttachmentsType();
-        $attRequest->Attachments->FileAttachment = $attachments;
-        
-        $attResponse = $this->ews->CreateAttachment($attRequest);
-        $attResponseId = $attResponse->ResponseMessages->CreateAttachmentResponseMessage->Attachments->FileAttachment->AttachmentId;
-        
-        // Save message id from create attachment response
-        $msgItemId = new ItemIdType();
-        $msgItemId->ChangeKey = $attResponseId->RootItemChangeKey;
-        $msgItemId->Id = $attResponseId->RootItemId;
-        
-        // Send and save message
-        $msgSendRequest = new SendItemType();
-                $msgSendRequest->ItemIds = new NonEmptyArrayOfBaseItemIdsType();
-        $msgSendRequest->ItemIds->ItemId = $msgItemId;
-        $msgSendRequest->SavedItemFolderId = new TargetFolderIdType();
-        $sentItemsFolder = new DistinguishedFolderIdType();
-        $sentItemsFolder->Id = 'sentitems';
-        $msgSendRequest->SavedItemFolderId->DistinguishedFolderId = $sentItemsFolder;
-        $msgSendRequest->SaveItemToFolder = true;
-        $msgSendResponse = $this->ews->SendItem($msgSendRequest);
-        
-        //var_dump($msgSendResponse);
     }
 
 }

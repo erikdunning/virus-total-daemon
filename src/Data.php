@@ -18,6 +18,16 @@ class Data {
         }
     }
 
+    public function attachmentExists( $attachmentId ){
+        $st = $this->dbh->prepare('SELECT `id` FROM `jobs` WHERE `attachment_id` = ? LIMIT 1');
+        $st->execute(array( $attachmentId ));
+        $result = $st->fetchAll(PDO::FETCH_OBJ);
+        if( sizeof( $result ) > 0 ){
+            return true;
+        }
+        return false;
+    }
+
     public function createJobs( $message, $attachmentItems ){
 
         $stmt = $this->dbh->prepare("
@@ -57,10 +67,7 @@ class Data {
             $timeAdded = gmdate('U');
             $status = 'queued';
 
-            $st = $this->dbh->prepare('SELECT `id` FROM `jobs` WHERE `attachment_id` = ? LIMIT 1');
-            $st->execute(array( $attachmentId ));
-            $result = $st->fetchAll(PDO::FETCH_OBJ);
-            if( sizeof( $result ) > 0 ){
+            if( $this->attachmentExists( $attachmentId ) ){
                 continue;
             }
 
@@ -70,7 +77,7 @@ class Data {
     }
 
     public function getQueued(){
-        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'queued\' ORDER BY `time_added` DESC LIMIT 1');
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'queued\' ORDER BY `time_added` ASC LIMIT 1');
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);
         if( sizeof( $result ) > 0 ){
