@@ -87,7 +87,8 @@ class Data {
     }
 
     public function markSending( $job ){
-        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'sending' WHERE `id` = $job->id");
+        $timeSent = gmdate('U');
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'sending', `time_sent` = $timeSent WHERE `id` = $job->id");
         return $stmt->execute();
     }
 
@@ -126,14 +127,33 @@ class Data {
 
     public function markSuccess( $job ){
         $timeCompleted = gmdate('U');
-        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'success', `time_sent` = $timeCompleted WHERE `id` = $job->id");
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'success', `time_completed` = $timeCompleted WHERE `id` = $job->id");
         return $stmt->execute();
     }
 
     public function markFailure( $job ){
         $timeCompleted = gmdate('U');
-        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'failure', `time_sent` = $timeCompleted WHERE `id` = $job->id");
+        $stmt = $this->dbh->query("UPDATE `jobs` SET `status` = 'failure', `time_completed` = $timeCompleted WHERE `id` = $job->id");
         return $stmt->execute();
+    }
+
+    public function getCompletedSet( $job ){
+        $stmt = $this->dbh->prepare("SELECT * FROM `jobs` WHERE `email_id` = ? AND `email_change_key` = ? ORDER BY `time_added` ASC");
+        $stmt->execute(array( $job->email_id, $job->email_change_key ));
+        $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $completed = false;
+        if( sizeof( $result ) > 0 ){
+            $completed = array();
+            foreach( $result as $j ){
+                if( ( $j->status === 'success' ) || ( $j->status === 'failure' ) ){
+                    $completed[] = $j;
+                }
+            }
+            if( sizeof( $result ) !== sizeof( $completed ) ){
+                $completed = false;
+            }
+        }
+        return $completed;
     }
 
 }

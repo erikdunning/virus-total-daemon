@@ -149,15 +149,28 @@ class Reader {
 
             $message = $response->ResponseMessages->GetItemResponseMessage->Items->Message;
 
-            if(!empty($message->Attachments->FileAttachment)) {
-                // FileAttachment attribute can either be an array or instance of stdClass...
-                $attachments = array();
-                if(is_array($message->Attachments->FileAttachment) === FALSE ) {
+            // FileAttachment attribute can either be an array or instance of stdClass...
+            $attachments = array();
+            
+            if( property_exists( $message->Attachments, 'FileAttachment' ) && !empty( $message->Attachments->FileAttachment ) ){
+                if( is_array($message->Attachments->FileAttachment) === FALSE ) {
                     $attachments[] = $message->Attachments->FileAttachment;
                 }
                 else {
                     $attachments = $message->Attachments->FileAttachment;
                 }
+            }
+
+            if( property_exists( $message->Attachments, 'ItemAttachment' ) && !empty( $message->Attachments->ItemAttachment ) ){ 
+                if( is_array($message->Attachments->ItemAttachment) === FALSE ) {
+                    $attachments[] = $message->Attachments->ItemAttachment;
+                }
+                else {
+                    $attachments = array_merge( $attachments, $message->Attachments->ItemAttachment );
+                }
+            }
+
+            if( sizeof($attachments) > 0 ) {
 
                 foreach($attachments as $attachment) {
 

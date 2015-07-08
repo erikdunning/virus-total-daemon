@@ -8,7 +8,6 @@ use PhpEws\Ntlm\NtlmSoapClient;
 use PhpEws\Ntlm\NtlmSoapClient\Exchange;
 use PhpEws\Exception\EwsException;
 use PhpEws\DataType;
-
 use PhpEws\DataType\MessageType;
 use PhpEws\DataType\EmailAddressType;
 use PhpEws\DataType\BodyType;
@@ -27,10 +26,13 @@ use PhpEws\DataType\TargetFolderIdType;
 use PhpEws\DataType\DistinguishedFolderIdType;
 use PhpEws\DataType\NonEmptyArrayOfAttachmentsType;
 
+use VirusTotal\Data;
+
 class Responder {
 
     protected $ews;
     protected $smarty;
+    protected $data;
 
     public function __construct(){
         $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
@@ -40,20 +42,37 @@ class Responder {
         $this->smarty->setCompileDir(   __DIR__ . '/../smarty/templates_c'   );
         $this->smarty->setConfigDir(    __DIR__ . '/../smarty/configs'       );
         $this->smarty->setCacheDir(     __DIR__ . '/../smarty/cache'         );
+        $this->data = new Data();
     }
 
-    public function sendResponse( $job, $report ){
-
-        $parsedReport = json_decode( $report ); 
+    public function sendResponse( $job ){
 
         $s = $this->smarty;
         $s->clearAllAssign();
 
-        $s->assign('permalink',         $parsedReport->permalink    );
-        $s->assign('filename',          $job->attachment_name       );
-        $s->assign('time_added',        $job->time_added            );
-        $s->assign('time_sent',         $job->time_sent             );
-        $s->assign('time_completed',    $job->time_completed        );
+        $completedSet = $this->data->getCompletedSet( $job );
+        if( $completedSet === FALSE ){
+            return;
+        }
+
+        $positives = 0;
+        $attachments = array();
+        foreach( $completedSet as $job ){
+            $parsedReport = json_decode( $job->report ); 
+            $positives += intval( $parsedReport->positives );
+            $attachments[] = array(
+                'permalink'         =>  $parsedReport->permalink            ,
+                'positives'         =>  $parsedReport->positives            ,
+                'filename'          =>  $job->attachment_name               ,
+                'time_added'        =>  date('r', $job->time_added )        ,
+                'time_sent'         =>  date('r', $job->time_sent )         ,
+                'time_completed'    =>  date('r', $job->time_completed )    
+            );
+        }
+
+
+        $s->assign('positives', $positives);
+        $s->assign('attachments', $attachments);
     
         //$msg = new ReplyAllToItemType();
         $msg = new MessageType();

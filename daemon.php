@@ -55,7 +55,7 @@ while( true ){
             echo 'Report for job ' . $job->id . " retrieved.\n";
             $virusTotalData->setReportData( $job, $report );
             $virusTotalData->markSuccess( $job );
-            $virusTotalResponder->sendResponse( $job, $report );
+            $virusTotalResponder->sendResponse( $job );
         } else if( $report === 0 ){
             echo 'Report for job ' . $job->id . " not found.\n";
             $virusTotalData->markFailure( $job );

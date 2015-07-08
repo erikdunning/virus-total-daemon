@@ -1,10 +1,69 @@
 <p>
-    Greetings,
+    {if $positives > 0}
+
+        ATTENTION!
+
+        <br/><br/>
+
+        There were {$positives} positive virus matches detected in one or more of your attachments.
+        See the summary below for further information but please <b>do not attempt to download or open
+        any of the attachments</b>.
+
+        <br/></br>
+
+        Please contact the IT Help Desk at your earliest convenience to report this potential problem.
+
+    {else}
+
+        Greetings,
+
+        <br/><br/>
+
+        No viruses were detected in your files.  However, please be advised that although none were
+        not detected, the file is not necessarily virus free.  Please take a moment to verify that:
+
+        <ol>
+            <li>The email address of the attachment sender is a known and trusted contact.</li>
+            <li>The attachment filename's and extentions pertain to files you were expecting to receive.</li>
+            <li>The file sizes of the attachments reasonably match what you were expecting.</li>
+        </ol>
+
+        <br/><br/>
+
+        If you have any questions or further concerns please contact 
+        the IT Help Desk at your earliest convenience.
+
+    {/if}
+
     <br/><br/>
-    Your virustotal report summary is available here: <a target="_blank" href="{$permalink}">Results</a>
+
+    Thank You
+
     <br/><br/>
-    Filename:       {$filename}<br/>
-    Time Added:     {$time_added}<br/>
-    Time Sent:      {$time_sent}<br/>
-    Time Completed: {$time_completed}<br/>
-</p> 
+
+    <i>Technical details follow.</i>
+
+</p>
+
+<br/><br/>
+
+<b>Attachment Report Summary</b>
+
+<br/>
+<hr/>
+<br/>
+
+{assign var="space"  value="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}
+
+<ol>
+{foreach from=$attachments item=result}
+    <li>
+        <b>Filename:</b>       {$space}{$result.filename}<br/>
+        <b>Positives:</b>      {$space}{$result.positives}<br/>
+        <b>Time Added:</b>     {$space}{$result.time_added}<br/>
+        <b>Time Sent:</b>      {$space}{$result.time_sent}<br/>
+        <b>Time Completed:</b> {$space}{$result.time_completed}<br/>
+        <b>Permalink:</b>      {$space}<a target="_blank" href="{$result.permalink}">Technical Results</a>
+    </li>
+{/foreach}
+</ol>
