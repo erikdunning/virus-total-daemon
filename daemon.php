@@ -13,13 +13,14 @@ use VirusTotal\Responder;
 
 while( true ){
 
-    /* Instantiate Required Classes */
+    /* Instantiate Required Classes and Objects */
     $virusTotalReader       = new Reader();
     $virusTotalSender       = new Sender();
     $virusTotalResponder    = new Responder();
     $virusTotalData         = new Data();
     $startDate              = isset( $startDate ) ? $startDate : (new DateTime())->setTimestamp(time() - ( 24 * 60 * 60 ));
     $lastBegan              = (new DateTime())->setTimestamp(time() - 60);
+    $config                 = json_decode( file_get_contents( __DIR__ . '/config.json') );
 
     /* Download Messages / Attachments and Create Jobs */
     $messages = $virusTotalReader->getMessages( $startDate );
@@ -35,13 +36,17 @@ while( true ){
     /* Perform Sender Operation */
     $job = $virusTotalData->getQueued();
     if( $job ){
-        $virusTotalData->markSending( $job );
-        $scanId = $virusTotalSender->sendVirusTotalRequest( $job );
-        if( is_string( $scanId ) ){
-            $virusTotalData->markPending( $job, $scanId );
-            echo 'Sent job ' . $job->id . ".\n";
+        if( intval( $job->attachment_size ) > intval( $config->attachments->maxSize ) ){
+            $virusTotalData->markFailure( $job );
+            echo "Failed job $job->id. Attachment too large.\n";
+        } else {
+            $virusTotalData->markSending( $job );
+            $scanId = $virusTotalSender->sendVirusTotalRequest( $job );
+            if( is_string( $scanId ) ){
+                $virusTotalData->markPending( $job, $scanId );
+                echo 'Sent job ' . $job->id . ".\n";
+            }
         }
-        /* TODO catch send error here, mark failure */
     }
 
     sleep(15);

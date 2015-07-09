@@ -11,7 +11,7 @@
 
         <br/></br>
 
-        Please contact the IT Help Desk at your earliest convenience to report this potential problem.
+        Please contact the Badger Meter Helpdesk at your earliest convenience to report this potential problem.
 
     {else}
 
@@ -24,14 +24,14 @@
 
         <ol>
             <li>The email address of the attachment sender is a known and trusted contact.</li>
-            <li>The attachment filename's and extentions pertain to files you were expecting to receive.</li>
+            <li>The attachment filenames and extensions pertain to files you were expecting to receive.</li>
             <li>The file sizes of the attachments reasonably match what you were expecting.</li>
         </ol>
 
         <br/><br/>
 
         If you have any questions or further concerns please contact 
-        the IT Help Desk at your earliest convenience.
+        the Badger Meter Helpdesk at your earliest convenience.
 
     {/if}
 
@@ -53,17 +53,21 @@
 <hr/>
 <br/>
 
-{assign var="space"  value="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}
+{assign var="td1"  value="<td style=\"width: 125px; border: 0; text-align: left\">"}
+{assign var="td2"  value="<td style=\"width: 275px; border: 0; text-align: right\">"}
+{assign var="tr"  value="<tr style=\"border: 0;\">"}
 
 <ol>
 {foreach from=$attachments item=result}
-    <li>
-        <b>Filename:</b>       {$space}{$result.filename}<br/>
-        <b>Positives:</b>      {$space}{$result.positives}<br/>
-        <b>Time Added:</b>     {$space}{$result.time_added}<br/>
-        <b>Time Sent:</b>      {$space}{$result.time_sent}<br/>
-        <b>Time Completed:</b> {$space}{$result.time_completed}<br/>
-        <b>Permalink:</b>      {$space}<a target="_blank" href="{$result.permalink}">Technical Results</a>
+    <li style="margin-bottom: 20px;">
+        <table style="margin-bottom: 20px; border: 0">
+            {$tr}{$td1}<b>Filename:</b></td>       {$td2}{$result.filename}</td></tr>
+            {$tr}{$td1}<b>Positives:</b></td>      {$td2}{$result.positives}</td></tr>
+            {$tr}{$td1}<b>Time Added:</b></td>     {$td2}{$result.time_added}</td></tr>
+            {$tr}{$td1}<b>Time Sent:</b></td>      {$td2}{$result.time_sent}</td></tr>
+            {$tr}{$td1}<b>Time Completed:</b></td> {$td2}{$result.time_completed}</td></tr>
+            {$tr}{$td1}<b>Permalink:</b></td>      {$td2}<a target="_blank" href="{$result.permalink}">Technical Results</a></td></tr>
+        </table>
     </li>
 {/foreach}
 </ol>

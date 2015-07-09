@@ -1,0 +1,53 @@
+<p>
+
+    ATTENTION!
+    
+    <br/><br/>
+
+    The following attachment{if count( $attachments ) > 1}s were {else } was {/if}too large to process.
+    Attachments must be less than or equal to {$limit} MB.
+
+    <br/><br/>
+
+    Please take a moment to verify that:
+
+    <ol>
+        <li>The email address of the attachment sender is a known and trusted contact.</li>
+        <li>The attachment filenames and extensions pertain to files you were expecting to receive.</li>
+        <li>The file sizes of the attachments reasonably match what you were expecting.</li>
+    </ol>
+
+    <br/></br>
+
+    Please contact the Badger Meter Helpdesk if you suspect a large attachment may contain a virus.
+
+    <br/><br/>
+
+    Thank You
+
+
+</p>
+
+<br/><br/>
+
+<b>Oversized Attachments</b>
+
+<br/>
+<hr/>
+<br/>
+
+{assign var="td1"  value="<td style=\"width: 125px; border: 0; text-align: left\">"}
+{assign var="td2"  value="<td style=\"width: 275px; border: 0; text-align: right\">"}
+{assign var="tr"  value="<tr style=\"border: 0;\">"}
+
+<ol>
+{foreach from=$attachments item=result}
+    <li style="margin-bottom: 20px;">
+        <table style="margin-bottom: 20px; border: 0">
+            {$tr}{$td1}<b>Filename:</b></td>        {$td2}{$result.filename}</td></tr>
+            {$tr}{$td1}<b>Size (Bytes):</b></td>    {$td2}{$result.size}</td></tr>
+        </table>
+    </li>
+{/foreach}
+</ol>
+

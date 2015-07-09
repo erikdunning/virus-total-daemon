@@ -35,7 +35,8 @@ class Responder {
     protected $data;
 
     public function __construct(){
-        $c = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $this->config = json_decode( file_get_contents( __DIR__ . '/../config.json' )  ); 
+        $c = $this->config;
         $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
         $this->smarty = new Smarty();
         $this->smarty->setTemplateDir(  __DIR__ . '/../smarty/templates'     );
@@ -103,6 +104,42 @@ class Responder {
 
         return $response->ResponseMessages->CreateItemResponseMessage->ResponseCode;
 
+    }
+
+    public function sendSizeExceeded( $message, $sizeExceeded ){
+        $s = $this->smarty;
+        $s->clearAllAssign();
+
+        $attachments = array();
+        foreach( $sizeExceeded as $attachment ){
+            $attachments[] = array(
+                'filename'  =>  $attachment->Name,
+                'size'      =>  $attachment->Size
+            );
+        }
+
+        $s->assign('limit', number_format( ( doubleval( $this->config->attachments->maxSize ) / 1000000 ), 2 ));
+        $s->assign('attachments', $attachments);
+    
+        $msg = new MessageType();
+
+        $msg->ReferenceItemId = new ItemIdType();
+        $msg->ReferenceItemId->Id = $message->ItemId->Id;
+        $msg->ReferenceItemId->ChangeKey = $message->ItemId->ChangeKey;
+
+        $msg->NewBodyContent = new BodyType();
+        $msg->NewBodyContent->BodyType = 'HTML';
+        $msg->NewBodyContent->_ = $s->fetch('size_exceeded.tmpl');
+
+        $msgRequest = new CreateItemType();
+        $msgRequest->Items = new NonEmptyArrayOfAllItemsType();
+        $msgRequest->Items->ReplyAllToItem = $msg;
+        $msgRequest->MessageDisposition = 'SendAndSaveCopy';
+        $msgRequest->MessageDispositionSpecified = TRUE;
+
+        $response = $this->ews->CreateItem($msgRequest);
+
+        return $response->ResponseMessages->CreateItemResponseMessage->ResponseCode;
     }
 
 }

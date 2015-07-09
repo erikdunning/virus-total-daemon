@@ -36,7 +36,8 @@ class Sender {
         } else if( $result && is_object( $result ) && property_exists($result, 'response_code') && ( $result->response_code == 0 ) ){
             return 0;
         } else if( ( ! $result ) || ( ! is_object( $result ) ) ) {
-            error_log("Virus Total Daemon: Error retrieving report.\n" . print_r( $result, true ));
+            error_log("Virus Total Daemon: Error retrieving report for job $job->id.\n" . print_r( $result, true ));
+            return 0;
         }
         return -2;
     }

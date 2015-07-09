@@ -26,6 +26,7 @@ use PhpEws\DataType\NonEmptyArrayOfBaseFolderIdsType;
 use PhpEws\DataType\NonEmptyArrayOfRequestAttachmentIdsType;
 
 use VirusTotal\Data;
+use VirusTotal\Responder;
 
 class Reader {
 
@@ -38,6 +39,7 @@ class Reader {
         $c = $this->config;
         $this->ews = new EwsConnection($c->exchange->host, $c->exchange->username, $c->exchange->password, EwsConnection::VERSION_2010_SP2);
         $this->data = new Data();
+        $this->responder = new Responder();
     }
 
     public function getMessages( $start ){
@@ -172,6 +174,7 @@ class Reader {
 
             if( sizeof($attachments) > 0 ) {
 
+                $sizeExceeded = array();
                 foreach($attachments as $attachment) {
 
                     $id = sha1( $attachment->AttachmentId->Id );
@@ -180,28 +183,40 @@ class Reader {
                         continue;
                     }
 
-                    $request = new GetAttachmentType();
-                    $request->AttachmentIds = new NonEmptyArrayOfRequestAttachmentIdsType();
-                    $request->AttachmentIds->AttachmentId = new RequestAttachmentIdType();
-                    $request->AttachmentIds->AttachmentId->Id = $attachment->AttachmentId->Id;
-                    $response = $this->ews->GetAttachment($request);
+                    /* Only download and store files within the size limitation constraint. */
+                    if( intval( $attachment->Size ) > intval( $this->config->attachments->maxSize ) ){
+                        $sizeExceeded[] = $attachment;
+                    } else {
 
-                    // Assuming response was successful ...
-                    $attachments = $response->ResponseMessages->GetAttachmentResponseMessage->Attachments;
-                    $content = $attachments->FileAttachment->Content;
+                        $request = new GetAttachmentType();
+                        $request->AttachmentIds = new NonEmptyArrayOfRequestAttachmentIdsType();
+                        $request->AttachmentIds->AttachmentId = new RequestAttachmentIdType();
+                        $request->AttachmentIds->AttachmentId->Id = $attachment->AttachmentId->Id;
+                        $response = $this->ews->GetAttachment($request);
 
-                    if( ! file_exists( $save_dir ) ){
-                        error_log('Virus Total Daemon: Attachment directory does not exist! ' . $save_dir);
-                        continue;
+                        // Assuming response was successful ...
+                        $attachments = $response->ResponseMessages->GetAttachmentResponseMessage->Attachments;
+                        $content = $attachments->FileAttachment->Content;
+
+                        if( ! file_exists( $save_dir ) ){
+                            error_log('Virus Total Daemon: Attachment directory does not exist! ' . $save_dir);
+                            continue;
+                        }
+
+                        file_put_contents("$save_dir/$id", $content);
                     }
 
-                    file_put_contents("$save_dir/$id", $content);
                     $attachmentItems[] = array(
                         'attachment_id' => $id,
                         'attachment_name' => $attachment->Name,
                         'attachment_size' => $attachment->Size,
                     );
                 }
+
+                if( sizeof( $sizeExceeded ) > 0 ){
+                    $this->responder->sendSizeExceeded( $message, $sizeExceeded );
+                }
+
             }
             else {
                 echo "No attachments found!\n";
