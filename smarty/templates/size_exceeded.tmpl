@@ -40,14 +40,10 @@
 {assign var="td2"  value="<td style=\"width: 275px; border: 0; text-align: right\">"}
 {assign var="tr"  value="<tr style=\"border: 0;\">"}
 
-<ol>
 {foreach from=$attachments item=result}
-    <li style="margin-bottom: 20px;">
-        <table style="margin-bottom: 20px; border: 0">
-            {$tr}{$td1}<b>Filename:</b></td>        {$td2}{$result.filename}</td></tr>
-            {$tr}{$td1}<b>Size (Bytes):</b></td>    {$td2}{$result.size}</td></tr>
-        </table>
-    </li>
+    <table style="margin-bottom: 20px; border: 0">
+        {$tr}{$td1}<b>Filename:</b></td>        {$td2}{$result.filename}</td></tr>
+        {$tr}{$td1}<b>Size (Bytes):</b></td>    {$td2}{$result.size}</td></tr>
+    </table>
 {/foreach}
-</ol>
 
