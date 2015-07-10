@@ -1,4 +1,5 @@
 {
+    "logfile": "/var/vtd/logs/application.log",
     "exchange":{
         "host":"",
         "username":"",
@@ -12,31 +13,11 @@
     },
     "virusTotal": {
         "apiKey":""
+        "apiScan":"https://www.virustotal.com/vtapi/v2/file/scan",
+        "apiReport":"https://www.virustotal.com/vtapi/v2/file/report"
     },
     "attachments": {
-        "maxSize": 128000000,
-        "maxNumber": 1,
-        "directory":"attachments"
-    },
-    "email":{
-        "success":{
-            "to":"",
-            "from":"no-reply@badgermeter.com",
-            "cc":"",
-            "subject":"Virus Total Results"
-        },
-        "error":{
-            "to":"",
-            "from":"",
-            "cc":"",
-            "subject":"Virus Total Error"
-
-        },
-        "admin":{
-            "to":"",
-            "from":"",
-            "cc":"",
-            "subject":"ADMIN: Virus Total Report"
-        }
+        "maxSize": 32000000,
+        "directory":"/var/vtd/attachments"
     }
 }

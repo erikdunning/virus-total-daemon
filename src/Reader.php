@@ -219,7 +219,7 @@ class Reader {
 
             }
             else {
-                echo "No attachments found!\n";
+                file_put_contents($this->config->logfile, "No attachments found!\n", FILE_APPEND);
             }   
         }
 

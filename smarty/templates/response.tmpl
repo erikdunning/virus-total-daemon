@@ -1,11 +1,12 @@
 <p>
     {if $positives > 0}
 
-        ATTENTION!
+        <b>ATTENTION!</b>
 
         <br/><br/>
 
-        There were {$positives} positive virus matches detected in one or more of your attachments.
+        There {if $positives === 1}was{else}were{/if} <b>{$positives}</b> positive virus 
+        match{if $positives !== 1}es{/if} detected in your attachment{if count( $attachments > 1 )}s{/if}.
         See the summary below for further information but please <b>do not attempt to download or open
         any of the attachments</b>.
 
@@ -19,8 +20,8 @@
 
         <br/><br/>
 
-        No viruses were detected in your files.  However, please be advised that although none were
-        not detected, the file is not necessarily virus free.  Please take a moment to verify that:
+        No viruses were detected in your file{if count( $attachments ) > 1}s{/if}.  However, please be advised that although none were
+        not detected, the {if count( $attachments ) > 1 }files are{else}file is{/if} not necessarily virus free.  Please take a moment to verify that:
 
         <ol>
             <li>The email address of the attachment sender is a known and trusted contact.</li>
@@ -63,8 +64,6 @@
         <table style="margin-bottom: 20px; border: 0">
             {$tr}{$td1}<b>Filename:</b></td>       {$td2}{$result.filename}</td></tr>
             {$tr}{$td1}<b>Positives:</b></td>      {$td2}{$result.positives}</td></tr>
-            {$tr}{$td1}<b>Time Added:</b></td>     {$td2}{$result.time_added}</td></tr>
-            {$tr}{$td1}<b>Time Sent:</b></td>      {$td2}{$result.time_sent}</td></tr>
             {$tr}{$td1}<b>Time Completed:</b></td> {$td2}{$result.time_completed}</td></tr>
             {$tr}{$td1}<b>Permalink:</b></td>      {$td2}<a target="_blank" href="{$result.permalink}">Technical Results</a></td></tr>
         </table>
