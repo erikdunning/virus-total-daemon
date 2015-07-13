@@ -20,6 +20,16 @@ virustotal.com account.
 Make sure the MySQL username and password are correct for the MySQL
 and that the server is available.
 
+Be aware that the service script and the current config.json files
+expect the installation location to be /var/vtd.  Changing that
+location will requiring updating those references.
+
+Finally, the vtd system user ( which the daemon runs as ) requires 
+group read & write permissions on and under the /var/vtd directory.
+You may apply those permissions by running:
+
+    sudo chmod -R g+rw /var/vtd
+
 ### MySQL ###
 A mysql server is required to store progress and results.
 The scripts/data.sql file contains the required database / table
