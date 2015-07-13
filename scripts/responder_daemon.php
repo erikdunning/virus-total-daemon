@@ -18,18 +18,18 @@ $config                 = json_decode( file_get_contents( __DIR__ . '/../config.
 
 $job = $virusTotalData->getPending();
 if( $job ){
-    file_put_contents($config->logfile, 'Querying job ' . $job->id . ".\n", FILE_APPEND);
+    file_put_contents($config->logfile, date('c') . ': Querying job ' . $job->id . ".\n", FILE_APPEND);
     $report = $virusTotalSender->getVirusTotalReport( $job ); 
     if( is_string( $report ) ){
-        file_put_contents($config->logfile, 'Report for job ' . $job->id . " retrieved.\n", FILE_APPEND);
+        file_put_contents($config->logfile, date('c') . ': Report for job ' . $job->id . " retrieved.\n", FILE_APPEND);
         $virusTotalData->setReportData( $job, $report );
         $virusTotalData->markSuccess( $job );
         $virusTotalResponder->sendResponse( $job );
     } else if( $report === 0 ){
-        file_put_contents($config->logfile, 'Report for job ' . $job->id . " not found.\n", FILE_APPEND);
+        file_put_contents($config->logfile, date('c') . ': Report for job ' . $job->id . " not found.\n", FILE_APPEND);
         $virusTotalData->markFailure( $job );
     } else {
-        file_put_contents($config->logfile, 'Report for job ' . $job->id . " still pending.\n", FILE_APPEND);
+        file_put_contents($config->logfile, date('c') . ': Report for job ' . $job->id . " still pending.\n", FILE_APPEND);
     }
 }
 

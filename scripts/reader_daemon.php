@@ -24,5 +24,5 @@ foreach( $messages as $msg ){
     $virusTotalData->createJobs( $msg, $attachmentItems );
 }
 
-file_put_contents($config->logfile, 'Read ' . sizeof( $messages ) . " messages.\n", FILE_APPEND);
+file_put_contents($config->logfile, date('c') . ': Read ' . sizeof( $messages ) . " messages.\n", FILE_APPEND);
 

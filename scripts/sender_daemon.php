@@ -18,13 +18,13 @@ $job = $virusTotalData->getQueued();
 if( $job ){
     if( intval( $job->attachment_size ) > intval( $config->attachments->maxSize ) ){
         $virusTotalData->markFailure( $job );
-        file_put_contents($config->logfile, "Failed job $job->id. Attachment too large.\n", FILE_APPEND);
+        file_put_contents($config->logfile, date('c') . ": Failed job $job->id. Attachment too large.\n", FILE_APPEND);
     } else {
         $virusTotalData->markSending( $job );
         $scanId = $virusTotalSender->sendVirusTotalRequest( $job );
         if( is_string( $scanId ) ){
             $virusTotalData->markPending( $job, $scanId );
-            file_put_contents($config->logfile, 'Sent job ' . $job->id . ".\n", FILE_APPEND);
+            file_put_contents($config->logfile, date('c') . ': Sent job ' . $job->id . ".\n", FILE_APPEND);
         }
     }
 }

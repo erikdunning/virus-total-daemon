@@ -77,11 +77,11 @@ class Data {
     }
 
     public function getQueued(){
-        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'queued\' ORDER BY `time_added` ASC LIMIT 1');
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'queued\' ORDER BY `time_added` ASC LIMIT 10');
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);
         if( sizeof( $result ) > 0 ){
-            return $result[0];
+            return $result[array_rand($result)];
         }
         return false;
     }
@@ -106,11 +106,11 @@ class Data {
     }
 
     public function getPending(){
-        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'pending\' ORDER BY `time_sent` ASC LIMIT 1');
+        $stmt = $this->dbh->query('SELECT * FROM `jobs` WHERE `status` = \'pending\' ORDER BY `time_sent` ASC LIMIT 10');
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);
         if( sizeof( $result ) > 0 ){
-            return $result[0];
+            return $result[array_rand($result)];
         }
         return false;
     }

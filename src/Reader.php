@@ -199,7 +199,7 @@ class Reader {
                         $content = $attachments->FileAttachment->Content;
 
                         if( ! file_exists( $save_dir ) ){
-                            error_log('Virus Total Daemon: Attachment directory does not exist! ' . $save_dir);
+                            error_log( date('c') . ': Virus Total Daemon: Attachment directory does not exist! ' . $save_dir);
                             continue;
                         }
 
@@ -219,7 +219,7 @@ class Reader {
 
             }
             else {
-                file_put_contents($this->config->logfile, "No attachments found!\n", FILE_APPEND);
+                file_put_contents($this->config->logfile, date('c') . ": No attachments found!\n", FILE_APPEND);
             }   
         }
 
